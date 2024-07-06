@@ -6,7 +6,7 @@
 
 {% block body %}
     <h1>Entry Not Found</h1>
-    
-    <h2>The entry for {{ title }} does not exist. Create it?</h2>
+    <br>
+    <p>No result for an entry named {{ title }}. <a href="{% url 'new' %}">Create it?</a></p>
 
 {% endblock %}

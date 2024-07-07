@@ -52,7 +52,7 @@ def search(request):
 # create a new entry
 def new(request):
 
-    # retrieve and validate form input
+    # retrieve, validate and save form input
     if request.method == "POST":
         form = NewEntryForm(request.POST, False)
         if form.is_valid():
@@ -67,10 +67,14 @@ def new(request):
             else:
                 util.save_entry(title, content)
                 return HttpResponseRedirect(reverse("wiki:entry", args=(title,)))
+        
+        # invalid form input
         else:
             return render(request, "encyclopedia/new.html", {
                 "form": form
             })
+    
+    # new form
     else:
         return render(request, "encyclopedia/new.html", {
             "form": NewEntryForm(),
@@ -81,17 +85,21 @@ def new(request):
 # edit an existing entry
 def edit(request, title):
 
-    # retrieve and validate form input
+    # retrieve, validate and save form input
     if request.method == "POST":
         form = NewEntryForm(request.POST)
         if form.is_valid():
             content = form.cleaned_data["content"]
             util.save_entry(title, content)
             return HttpResponseRedirect(reverse("wiki:entry", args=(title,)))
+        
+        # invalid form input
         else:
             return render(request, "encyclopedia/new.html", {
                 "form": form
             })
+    
+    # editing form
     else:
         content = markdown(util.get_entry(title))
         return render(request, "encyclopedia/new.html", {

@@ -1,20 +1,24 @@
+from django import forms
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
-from markdown2 import markdown
-from . import util
-from django import forms
 from django.urls import reverse
+from markdown2 import markdown
+from random import randrange
+from . import util
 import requests
 
 
 class NewEntryForm(forms.Form):
-    title = forms.CharField(label="Title")
-    content = forms.CharField(widget=forms.Textarea)
+    title = forms.CharField(label="Entry Title")
+    content = forms.CharField(label="Markdown Content", widget=forms.Textarea(attrs={
+        "class": "responsive-text-area"
+        })
+    )
 
 
 def index(request):
     return render(request, "encyclopedia/index.html", {
-        "entries": util.list_entries()
+        "titles": util.list_entries()
     })
 
 
@@ -30,7 +34,7 @@ def entry(request, title):
 def search(request):
 
     # implemented without Django Forms as an exercise
-    title = request.POST.get('q')
+    title = request.POST.get("q")
     if util.get_entry(title):
         return renderEntry(request, title)
     else:
@@ -39,7 +43,7 @@ def search(request):
         results = [entry for entry in util.list_entries() if title.lower() in entry.lower()]
         if len(results) > 0:
             return render(request, "encyclopedia/results.html", {
-                "entries": results
+                "titles": results
             })
         else:
             return entryNotFound(request, title)
@@ -50,7 +54,7 @@ def new(request):
 
     # retrieve and validate form input
     if request.method == "POST":
-        form = NewEntryForm(request.POST)
+        form = NewEntryForm(request.POST, False)
         if form.is_valid():
             title = form.cleaned_data["title"]
             content = form.cleaned_data["content"]
@@ -91,12 +95,16 @@ def edit(request, title):
     else:
         content = markdown(util.get_entry(title))
         return render(request, "encyclopedia/new.html", {
-            "form": NewEntryForm(initial={"content": content, "title": "Title cannot be edited"}),
+            "form": NewEntryForm(initial={"content": content, "title": "Title cannot be changed"}),
             "title": title
         })
 
-def random():
-    
+
+# redirect to a random entry
+def random(request):
+    entries = util.list_entries()
+    random_entry = randrange(len(entries))
+    return HttpResponseRedirect(reverse("wiki:entry", args=(entries[random_entry],)))
 
 
 # helper function to display an entry

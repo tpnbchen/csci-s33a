@@ -1,17 +1,18 @@
 {% extends "encyclopedia/layout.html" %}
 
 {% block title %}
-    New Page
+    {{ title }}
 {% endblock %}
 
 {% block body %}
-    <h1>New Page</h1>
-    <form action="{% url 'new' %}" method="post">
+    <h1>{{ title }}</h1>
+    {% if title == "New Entry" %}
+        <form action="{% url 'wiki:new' %}" method="post">
+    {% else %}
+        <form action="{% url 'wiki:edit' title %}" method="post">
+    {% endif %}
         {% csrf_token %}
         {{ form }}
         <input type="submit">
     </form>
 {% endblock %}
-
-
-

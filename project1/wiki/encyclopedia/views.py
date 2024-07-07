@@ -1,18 +1,21 @@
+from random import randrange
+
 from django import forms
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from markdown2 import markdown
-from random import randrange
+
 from . import util
-import requests
 
 
 class NewEntryForm(forms.Form):
     title = forms.CharField(label="Entry Title")
-    content = forms.CharField(label="Markdown Content", widget=forms.Textarea(attrs={
-        "class": "responsive-text-area"
-        })
+    content = forms.CharField(
+            label="Markdown Content",
+            widget=forms.Textarea(attrs={
+                "class": "responsive-text-area"
+            })
     )
 
 
@@ -23,14 +26,14 @@ def index(request):
 
 
 # return a wiki entry
-def entry(request, title): 
+def entry(request, title):
     if util.get_entry(title):
         return renderEntry(request, title)
     else:
         return entryNotFound(request, title)
 
 
-# search
+# search for an entry
 def search(request):
 
     # implemented without Django Forms as an exercise
@@ -40,7 +43,8 @@ def search(request):
     else:
 
         # return entries with titles containing the search string
-        results = [entry for entry in util.list_entries() if title.lower() in entry.lower()]
+        results = [entry for entry in util.list_entries()
+                   if title.lower() in entry.lower()]
         if len(results) > 0:
             return render(request, "encyclopedia/results.html", {
                 "titles": results
@@ -66,14 +70,16 @@ def new(request):
                 })
             else:
                 util.save_entry(title, content)
-                return HttpResponseRedirect(reverse("wiki:entry", args=(title,)))
-        
+                return HttpResponseRedirect(
+                        reverse("wiki:entry", args=(title,))
+                )
+
         # invalid form input
         else:
             return render(request, "encyclopedia/new.html", {
                 "form": form
             })
-    
+
     # new form
     else:
         return render(request, "encyclopedia/new.html", {
@@ -92,18 +98,21 @@ def edit(request, title):
             content = form.cleaned_data["content"]
             util.save_entry(title, content)
             return HttpResponseRedirect(reverse("wiki:entry", args=(title,)))
-        
+
         # invalid form input
         else:
             return render(request, "encyclopedia/new.html", {
                 "form": form
             })
-    
+
     # editing form
     else:
         content = markdown(util.get_entry(title))
         return render(request, "encyclopedia/new.html", {
-            "form": NewEntryForm(initial={"content": content, "title": "Title cannot be changed"}),
+            "form": NewEntryForm(initial={
+                "content": content,
+                "title": "Title cannot be changed"
+            }),
             "title": title
         })
 
@@ -112,7 +121,9 @@ def edit(request, title):
 def random(request):
     entries = util.list_entries()
     random_entry = randrange(len(entries))
-    return HttpResponseRedirect(reverse("wiki:entry", args=(entries[random_entry],)))
+    return HttpResponseRedirect(
+            reverse("wiki:entry", args=(entries[random_entry],))
+    )
 
 
 # helper function to display an entry

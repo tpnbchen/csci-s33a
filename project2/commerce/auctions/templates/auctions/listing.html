@@ -1,0 +1,15 @@
+{% extends 'auctions/layout.html' %}
+
+{% block body %}
+
+<h1> {{ listing_title }} </h1>
+<p>
+    {{ listing_description }}
+</p>
+<img src="{{ listing_image }}" alt="">
+
+{% if user.is_authenticated %}
+    <br>
+    <a href="{% url 'listing_delete' listing_id %}">Delete this listing</a>
+{% endif %}
+{% endblock %}

@@ -7,16 +7,18 @@ class User(AbstractUser):
 
 
 class Listing(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL)
-    title = models.CharField()
-    description = models.CharField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=128)
+    description = models.CharField(max_length=512)
+    starting_bid = models.PositiveIntegerField()
     image_link = models.URLField()
 
 
 class Bid(models.Model):
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     amount = models.PositiveIntegerField()
+    submitted = models.DateTimeField(auto_now_add=True, editable=False)
 
 
 class Comment(models.Model):

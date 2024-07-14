@@ -15,9 +15,9 @@ class Listing(models.Model):
     title = models.CharField(max_length=64)
     description = models.CharField(max_length=512)
     starting_bid = models.PositiveIntegerField()
-    image_link = models.URLField()
-    category = models.ForeignKey(Category, default="Other", 
-            on_delete=models.SET_DEFAULT)
+    image_link = models.URLField(blank=True, null=True)
+    category = models.ForeignKey(Category, 
+            on_delete=models.SET_NULL, blank=True, null=True)
 
 
 class Bid(models.Model):

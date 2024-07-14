@@ -2,14 +2,14 @@
 
 {% block body %}
 
-<h1> {{ listing_title }} </h1>
-<p>
-    {{ listing_description }}
-</p>
-<img src="{{ listing_image }}" alt="">
-
+<h1> {{ listing.title }} </h1>
+<p>{{ listing.description }}</p>
+{% if listing.image_link %}
+    <img src="{{ listing.image_link }}" alt="">
+{% endif %}
 {% if user.is_authenticated %}
     <br>
-    <a href="{% url 'listing_delete' listing_id %}">Delete this listing</a>
+    
+    <a href="{% url 'listing_delete' listing.id %}">Delete this listing</a>
 {% endif %}
 {% endblock %}

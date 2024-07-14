@@ -1,5 +1,4 @@
-from django import forms
-from django.forms import ModelForm
+from django.forms import ModelForm, Textarea
 from .models import Listing
 
 # class NewListingForm(forms.Form):
@@ -19,3 +18,8 @@ class NewListingForm(ModelForm):
     class Meta:
         model = Listing
         fields = ["title", "description", "starting_bid", "image_link", "category"]
+        widgets = {
+            "description":Textarea(attrs={
+                "class": "responsive-text-area"
+            })
+        }

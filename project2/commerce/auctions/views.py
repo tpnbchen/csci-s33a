@@ -11,7 +11,20 @@ from .models import User, Listing, Bid, Comment
 
 
 def index(request):
-    return render(request, "auctions/index.html")
+    listings = Listing.objects.all()
+    highest_bids = {}
+    for listing in listings:
+        try:
+            highest_bid = Bid.objects.filter(listing=listing).order_by("amount")[0]
+        except IndexError:
+            highest_bid = 0
+        if highest_bid > listing.starting_bid:
+            highest_bids[listing] = highest_bid
+        else:
+            highest_bids[listing] = listing.starting_bid
+    return render(request, "auctions/index.html", {
+            "listings": highest_bids
+        })
 
 
 def login_view(request):
@@ -76,11 +89,17 @@ def listing_new(request):
             description = form.cleaned_data["description"]
             image_link = form.cleaned_data["image_link"]
             starting_bid = form.cleaned_data["starting_bid"]
-        listing = Listing(
+            category = form.cleaned_data["category"]
+            listing = Listing(
                 user=request.user, title=title, description=description, 
-                starting_bid=starting_bid,image_link=image_link)
-        listing.save()
-        return listing_view(request, listing.id)
+                starting_bid=starting_bid,image_link=image_link, category=category)
+            listing.save()
+            return listing_view(request, listing.id)
+        else:
+            return render(request, "auctions/listing_new.html", {
+                "form": form,
+                "errors": form.errors
+            })
     else:
         return render(request, "auctions/listing_new.html", {
             "form": NewListingForm()
@@ -95,11 +114,7 @@ def listing_view(request, listing_id):
         return listingNotFound(request, listing_id)
     
     return render(request, "auctions/listing.html", {
-        "listing_title": listing.title,
-        "listing_description": listing.description,
-        "listing_image": listing.image_link,
-        "listing_user": listing.user,
-        "listing_id": listing.id
+        "listing": listing
     })
 
 @login_required
@@ -108,6 +123,7 @@ def listing_delete(request, listing_id):
     if request.user == listing.user:
         listing.delete()
     return HttpResponseRedirect(reverse("index"))
+
 
 def watchlist(request):
     pass

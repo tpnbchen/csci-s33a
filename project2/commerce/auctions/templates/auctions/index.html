@@ -3,5 +3,25 @@
 {% block body %}
     <h2>Active Listings</h2>
 
-    TODO
+    <div class="table">
+        {% for key, value in listings.items %}
+            <div class="row">
+                <div class="cell">
+                    <a href="{% url 'listing_view' key.id %}">{{ key.title }}</a>
+                </div>
+                <div class="cell">
+                    <p>{{ key.description }}</p>
+                </div>
+                <div class="cell">
+                    <p>{{ value }}</p>
+                </div>
+                <div class="cell">
+                    {% if key.image_link %}
+                        <<img src="{{ key.image_link }}" alt="{{ key.image_link }}">
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+        
+    </div>
 {% endblock %}

@@ -1,23 +1,20 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-    <h2>Active Listings</h2>
+    <h2>Watchlist</h2>
 
     <div class="table">
-        {% for listing, bid in listings.items %}
+        {% for listing in listings %}
             <div class="row">
                 <div class="cell">
                     <a href="{% url 'listing_view' listing.id %}">{{ listing.title }}</a>
                 </div>
                 <div class="cell">
-                    <p>{{ listing.description }}</p>
-                </div>
-                <div class="cell">
-                    <p>{{ bid }}</p>
+                    {{ listing.description }}
                 </div>
                 <div class="cell">
                     {% if listing.image_link %}
-                        <img src="{{ listing.image_link }}" alt="{{ listing.image_link }}">
+                        <img src="{{ listing.image_link }}" alt="">
                     {% endif %}
                 </div>
             </div>

@@ -8,8 +8,20 @@
     <img src="{{ listing.image_link }}" alt="">
 {% endif %}
 {% if user.is_authenticated %}
+    <form action="{% url 'watchlist' %}" method="post">
+        {% csrf_token %}
+
+        {% if watchlist_added %}
+            {{ form }}
+            <input type="submit" value="Remove from Watchlist">
+        {% else %}
+            {{ form }}
+            <input type="submit" value="Submit to Watchlist">
+        {% endif %}
+    </form>
     <br>
-    
+    <!-- remove this after testing -->
     <a href="{% url 'listing_delete' listing.id %}">Delete this listing</a>
+
 {% endif %}
 {% endblock %}

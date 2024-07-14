@@ -1,5 +1,5 @@
 from django.forms import ModelForm, Textarea
-from .models import Listing
+from .models import Listing, WatchlistItem
 
 # class NewListingForm(forms.Form):
 #     title = forms.CharField(label="Listing Title")
@@ -23,3 +23,9 @@ class NewListingForm(ModelForm):
                 "class": "responsive-text-area"
             })
         }
+
+
+class WatchListForm(ModelForm):
+    class Meta:
+        model = WatchlistItem
+        fields = ["listing"]

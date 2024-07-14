@@ -22,10 +22,13 @@
             </li>
             {% if user.is_authenticated %}
                 <li class="nav-item">
-                    <a class="nave-link" href="{% url 'listing_new' %}">New Listing</a>
+                    <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
+                    <a class="nav-link" href="{% url 'listing_new' %}">New Listing</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'watchlist' %}">WatchList</a>
                 </li>
             {% else %}
                 <li class="nav-item">

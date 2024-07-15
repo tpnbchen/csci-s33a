@@ -3,25 +3,22 @@
 {% block body %}
     <h2>Active Listings</h2>
 
-    <div class="table">
-        {% for listing, bid in listings.items %}
+    <div class="container">
+        {% for listing, bid_amount in listings.items %}
             <div class="row">
-                <div class="cell">
-                    <a href="{% url 'listing_view' listing.id %}">{{ listing.title }}</a>
+                <div class="col-sm-2">
+                    <a href="{% url 'listing_view' listing.id %}"><h3>{{ listing.title }}</h3></a>
+                    <p>Current bid: {{ bid_amount }}</p>
                 </div>
-                <div class="cell">
+                <div class="col-sm-5">
                     <p>{{ listing.description }}</p>
                 </div>
-                <div class="cell">
-                    <p>{{ bid }}</p>
-                </div>
-                <div class="cell">
+                <div class="col-sm-5">
                     {% if listing.image_link %}
-                        <img src="{{ listing.image_link }}" alt="{{ listing.image_link }}">
+                        <img class="img-fluid" src="{{ listing.image_link }}" alt="{{ listing.image_link }}">
                     {% endif %}
                 </div>
             </div>
         {% endfor %}
-        
     </div>
 {% endblock %}

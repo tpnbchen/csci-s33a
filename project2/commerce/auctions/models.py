@@ -19,6 +19,7 @@ class Listing(models.Model):
     image_link = models.URLField(blank=True, null=True)
     category = models.ForeignKey(Category, 
             on_delete=models.SET_NULL, blank=True, null=True)
+    closed = models.BooleanField(default=False)
 
 
 # Table of Bids

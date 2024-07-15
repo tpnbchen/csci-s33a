@@ -2,26 +2,77 @@
 
 {% block body %}
 
-<h1> {{ listing.title }} </h1>
-<p>{{ listing.description }}</p>
-{% if listing.image_link %}
-    <img src="{{ listing.image_link }}" alt="">
-{% endif %}
-{% if user.is_authenticated %}
-    <form action="{% url 'watchlist' %}" method="post">
-        {% csrf_token %}
-
-        {% if watchlist_added %}
-            {{ form }}
-            <input type="submit" value="Remove from Watchlist">
-        {% else %}
-            {{ form }}
-            <input type="submit" value="Submit to Watchlist">
+<div class="container">
+    <!-- display feedback from form submissions -->
+    <div class="row">
+        {% if message %}
+            <div class="alert alert-info">
+                {{ message }}
+            </div>
         {% endif %}
-    </form>
-    <br>
-    <!-- remove this after testing -->
-    <a href="{% url 'listing_delete' listing.id %}">Delete this listing</a>
+    </div>
+    <div class="row">
+        <!-- listing information -->
+            <h1> {{ listing.title }} </h1>
+            <p>{{ listing.description }}</p>
+            {% if listing.image_link %}
+                <img class="img-fluid" src="{{ listing.image_link }}" alt="">
+            {% endif %}
+    </div>
+    <hr>
+    <div class="row">
+        {% if user.is_authenticated %}  
+            <form action="{% url 'watchlist' listing.id %}" method="post">
+                {% csrf_token %}
 
-{% endif %}
+                {% if watchlistitem %}
+                    {{ watchlistform }}
+                    <input type="submit" value="Remove from Watchlist">
+                {% else %}
+                    {{ watchlistform }}
+                    <input type="submit" value="Add to Watchlist">
+                {% endif %}
+            </form>
+        {% endif %}
+    </div>
+    <!-- bidding form and info -->
+    <div class="row">
+        Highest bid: 
+        {% if bid %}
+            {{ bid.amount }}
+        {% else %}
+            {{ listing.starting_bid }}
+        {% endif %}
+    </div>
+    <div class="row">
+        {% if user.is_authenticated and not listing.closed %}  
+            <form action="{% url 'bid' listing.id %}" method="post">
+                {% csrf_token %}
+                {{ bidform }}
+                <input type="submit" value="Submit Bid">
+            </form>    
+        {% endif %}
+    </div>
+    <!-- closed listing info and close listing form -->
+    <div class="row">
+        {% if listing.closed %}
+            <p>listing is closed.</p>
+            {% if user == bid.user %}
+                <p> You won!</p>
+            {% elif user == listing.user %}
+                <p>Listing won by {{ bid.user }}</p>
+            {% endif %}   
+        {% else %}
+            {% if user == listing.user %}
+                <form action="{% url 'close' listing.id %}" method="post">
+                    {% csrf_token %}
+                    {{ closeform }}
+                    <input type="submit" value="Close Listing">
+                </form>
+            {% endif %}
+        {% endif %}
+    </div>
+        <!-- for testing -->
+        <a href="{% url 'listing_delete' listing.id %}" hidden>Delete this listing</a>
+</div>
 {% endblock %}

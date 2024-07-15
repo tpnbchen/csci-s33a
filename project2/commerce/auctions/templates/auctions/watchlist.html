@@ -3,22 +3,21 @@
 {% block body %}
     <h2>Watchlist</h2>
 
-    <div class="table">
+    <div class="container">
         {% for listing in listings %}
             <div class="row">
-                <div class="cell">
+                <div class="col-sm-2">
                     <a href="{% url 'listing_view' listing.id %}">{{ listing.title }}</a>
                 </div>
-                <div class="cell">
+                <div class="col-sm-5">
                     {{ listing.description }}
                 </div>
-                <div class="cell">
+                <div class="col-sm-5">
                     {% if listing.image_link %}
-                        <img src="{{ listing.image_link }}" alt="">
+                        <img class="img-fluid" src="{{ listing.image_link }}" alt="{{ listing.image_link }}">
                     {% endif %}
                 </div>
             </div>
         {% endfor %}
-        
     </div>
 {% endblock %}

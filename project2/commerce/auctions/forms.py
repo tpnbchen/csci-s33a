@@ -1,19 +1,8 @@
-from django.forms import ModelForm, Textarea
-from .models import Listing, WatchlistItem
-
-# class NewListingForm(forms.Form):
-#     title = forms.CharField(label="Listing Title")
-#     description = forms.CharField(label="Listing Description",
-#             widget=forms.Textarea(attrs={
-#                 "class": "responsive-text-area"
-#             })
-#     )
-#     starting_bid = forms.IntegerField(label="Starting Bid", min_value=1, 
-#             max_value=2147483647)
-#     image_link = forms.URLField(label="Listing Image URL", required=False)
-#     category = forms.ChoiceField(label="Listing Category", required=False,
-#             choices="")
+from django.forms import ModelForm, Textarea, HiddenInput
+from .models import Listing, WatchlistItem, Bid
     
+
+# to create a new Listing
 class NewListingForm(ModelForm):
     class Meta:
         model = Listing
@@ -25,7 +14,29 @@ class NewListingForm(ModelForm):
         }
 
 
+# To add or remove from Watchlist
 class WatchListForm(ModelForm):
     class Meta:
         model = WatchlistItem
         fields = ["listing"]
+        widgets = {"listing": HiddenInput()}
+
+
+# to submit a Bid
+class BidForm(ModelForm):
+    class Meta:
+        model = Bid
+        fields = ["amount"]
+        labels = {"amount": "Enter bid"}
+
+
+# to close a Listing
+class CloseForm(ModelForm):
+    class Meta:
+        model = Listing
+        fields = ["closed"]
+        widgets = {"closed": HiddenInput()}
+
+
+        
+        

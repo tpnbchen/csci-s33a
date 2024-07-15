@@ -1,6 +1,6 @@
 from django.forms import ModelForm, Textarea, HiddenInput
-from .models import Listing, WatchlistItem, Bid
-    
+from .models import Listing, WatchlistItem, Bid, Comment
+
 
 # to create a new Listing
 class NewListingForm(ModelForm):
@@ -8,10 +8,10 @@ class NewListingForm(ModelForm):
         model = Listing
         fields = ["title", "description", "starting_bid", "image_link", "category"]
         widgets = {
-            "description":Textarea(attrs={
+            "description": Textarea(attrs={
                 "class": "responsive-text-area"
             })
-        }
+        }   
 
 
 # To add or remove from Watchlist
@@ -38,5 +38,13 @@ class CloseForm(ModelForm):
         widgets = {"closed": HiddenInput()}
 
 
-        
-        
+# to Comment on a Listing
+class CommentForm(ModelForm):
+    class Meta:
+        model = Comment
+        fields = ["text"]
+        widgets = {
+            "text": Textarea(attrs={
+                    "class": "responsive-text-area"
+            })
+        }

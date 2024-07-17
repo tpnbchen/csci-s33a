@@ -9,6 +9,8 @@ class User(AbstractUser):
 # Table of Category options for Listings
 class Category(models.Model):
     name = models.CharField(primary_key=True, max_length=32)
+    def __str__(self):
+        return self.name
 
 
 class Listing(models.Model):
@@ -20,6 +22,9 @@ class Listing(models.Model):
     category = models.ForeignKey(Category,
             on_delete=models.SET_NULL, blank=True, null=True)
     closed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.title
 
 
 class Bid(models.Model):

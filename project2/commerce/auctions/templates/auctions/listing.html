@@ -13,13 +13,13 @@
     </div>
     <!-- listing information -->
     <div class="row border">
-        <div class="col border">
+        <div class="col">
             <h2> {{ listing.title }} </h2>
         </div>
-        <div class="col border">
+        <div class="col">
             <p>{{ listing.description }}</p>
         </div>
-        <div class="col border">
+        <div class="col">
             {% if listing.image_link %}
                 <img class="img-fluid" src="{{ listing.image_link }}" alt="">
             {% endif %}

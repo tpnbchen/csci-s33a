@@ -12,6 +12,8 @@
     <hr>
 
     <div id="emails-view">
+        <div id="emails-view-title"></div>
+        <div class="container-fluid border" id="emails-view-table"></div> 
     </div>
 
     <div id="compose-view">
@@ -27,9 +29,14 @@
                 <input class="form-control" id="compose-subject" placeholder="Subject">
             </div>
             <textarea class="form-control" id="compose-body" placeholder="Body"></textarea>
-            <input type="submit" class="btn btn-primary"/>
+            <input type="submit" class="btn btn-primary" id="send"/>
         </form>
     </div>
+
+    <div id="email-view">
+        <h3>Email View</h3>
+    </div>
+    
 {% endblock %}
 
 {% block script %}

@@ -64,7 +64,7 @@ function load_mailbox(mailbox) {
       email_contents = document.createElement('div');
       email_contents.id = `email-${email.id}-content`;
       email_contents.classList.add("col");
-      email_contents.addEventListener('click', () => show_email(email));
+      email_contents.addEventListener('click', () => {show_email(email)});
       email_fields(email, ['sender', 'subject', 'timestamp'], email_contents);  
       email_item.appendChild(email_contents);   
 

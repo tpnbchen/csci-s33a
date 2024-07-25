@@ -1,5 +1,14 @@
 {% extends "network/layout.html" %}
 
 {% block body %}
-    TODO
+    <div>
+        <h3>New Post</h3>
+        <form id="post">
+            <input disabled class="form-control" value ="{{ request.user.username }}">
+            <textarea class="form-control" id="post-text"></textarea>
+            <input type="submit" class="btn btn-primary" id="post-submit">
+            
+        </form>
+    </div>    
+
 {% endblock %}

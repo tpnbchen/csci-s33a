@@ -1,14 +1,24 @@
 {% extends "network/layout.html" %}
+{% load static %} 
 
 {% block body %}
-    <div>
-        <h3>New Post</h3>
-        <form id="post">
-            <input disabled class="form-control" value ="{{ request.user.username }}">
-            <textarea class="form-control" id="post-text"></textarea>
-            <input type="submit" class="btn btn-primary" id="post-submit">
-            
-        </form>
-    </div>    
+    {% if user.is_authenticated %}
+        <div id="post-new">
+            <h3>New Post</h3>
+            <form id="post-form">
+                {% csrf_token %}
+                <textarea class="form-control" id="post-text"></textarea>
+                <input type="submit" class="btn btn-primary" id="post-submit" value="Post">
+            </form>
+        </div> 
+    {% endif %}   
+    <div id="posts-view">
+        <div id="posts-view-title"></div>
+        <div class="container-fluid border" id="posts-view-table"></div>
+    </div>
 
+{% endblock %}
+
+{% block script %}
+    <script src="{% static 'network/network.js' %}"></script>
 {% endblock %}

@@ -8,9 +8,18 @@ class User(AbstractUser):
 
 class Post(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE)
-    text = models.TextField()
+    content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True,editable=False)
 
+    def __str__(self):
+        return f"{self.user}, {self.timestamp}, {self.content}"
+    
+    def serialize(self):
+        return {
+            "user": self.user,
+            "content": self.content,
+            "timestamp": self.timestamp.strftime("%b %d %Y, %I:%M %p")
+        }
 
 class Like(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE)

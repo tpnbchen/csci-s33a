@@ -1,0 +1,34 @@
+{% extends "network/index.html" %}
+
+{% block page %}
+    <div id="post-view-table-html">
+    {% for post in page_obj %}
+        <div id="post-{{ post.id }}" data-id="{{ post.id }}">
+            <div id="post-{{ post.id }}-user">
+                <a href="{% url 'profile' post.user %}">{{ post.user }}</a>
+            </div>
+            <div id="post-{{ post.id }}-content">{{ post.content }}</div>
+            <div id="post-{{ post.id }}-time">{{ post.timestamp }}</div>
+            <button id="post-{{ post.id }}-button" type="button">like</button> 
+        </div>
+        <br>
+    {% endfor %}
+    </div>
+    <div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+{% endblock page %}

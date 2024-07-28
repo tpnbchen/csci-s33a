@@ -3,7 +3,15 @@ from django.db import models
 
 
 class User(AbstractUser):
-    following = models.ManyToManyField("self", symmetrical=False, related_name="followed_by")
+    followees = models.ManyToManyField("self", through='Follower', symmetrical=False, related_name="followers")
+
+
+class Follower(models.Model):
+    followee = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'follower')
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'followee')
+
+    class Meta:
+        unique_together = ('follower', 'followee')
 
 
 class Post(models.Model):
@@ -16,11 +24,14 @@ class Post(models.Model):
     
     def serialize(self):
         return {
-            "user": self.user,
+            "id": self.id,
+            "user": self.user.username,
             "content": self.content,
             "timestamp": self.timestamp.strftime("%b %d %Y, %I:%M %p")
         }
 
+
 class Like(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE)
     post = models.ForeignKey("Post", on_delete=models.CASCADE)
+

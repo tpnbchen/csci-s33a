@@ -237,3 +237,9 @@ def edit(request):
 
     updated_content = Post.objects.get(id=post['id']).content
     return JsonResponse({"updated_content": updated_content}, status=201)
+
+
+# originally followed posts were loaded dynamically but was not able to load it from a profile
+@login_required
+def following(request):
+    return render(request, "network/following.html")

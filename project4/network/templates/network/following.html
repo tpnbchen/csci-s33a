@@ -1,0 +1,16 @@
+{% extends "network/layout.html" %}
+{% load static %} 
+
+{% block body %}
+    {% if user.is_authenticated %}
+        <div id="post-new">
+            <h3>New Post</h3>
+            <form id="post-form">
+                {% csrf_token %}
+                <textarea class="form-control" id="post-text"></textarea>
+                <input type="submit" class="btn btn-primary" id="post-submit" value="Post">
+            </form>
+        </div> 
+    {% endif %}   
+    {% include "network/posts.html" %}
+{% endblock %}

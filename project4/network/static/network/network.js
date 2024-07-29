@@ -1,11 +1,11 @@
 // globals
-const path = window.location.pathname
 const page_size = 10
 var post_furthest = 0
 
 document.addEventListener('DOMContentLoaded', function() {
 
     // if on the profile page, add event listener to Follow/Unfollow button and load profile posts
+    const path = window.location.pathname
     if (path.startsWith('/profile')) {
         const profile = JSON.parse(document.getElementById('profile').textContent);
         const button_follow = document.querySelector('#button-follow');
@@ -16,28 +16,31 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }; 
         load_posts(`${path.split('/')[2]}`)
-    // if on the home page, add event listener to post form and load all posts
-    } else if (path === '/') {
+    
+    // if not on profile, add event listener to post form and load posts
+    } else {
         document.querySelector('#post-form').addEventListener('submit', (event) => {
             submit_post();
             event.preventDefault();
         });
-        load_posts('all');
     };
-    // add event listener to load posts of followed users
-    document.querySelector('#following').addEventListener('click', () => {
+
+    // if on home or following page, load appropriate posts
+    if (path === '/') {
+        load_posts('all');
+    } else if (path.startsWith('/following')) {
         post_furthest = 0
         load_posts('following');
-    });
+    };
 });
 
 // retrieve posts 
 function load_posts(filter) {
-    console.log("load_post")
 
     const posts_view_table = document.querySelector('#posts-view-table');
     posts_view_table.innerHTML = null;
 
+    // tracking for pagination
     const start_post = post_furthest;
     const end_post = start_post + page_size
     post_furthest = end_post;

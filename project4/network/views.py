@@ -100,7 +100,6 @@ def post(request):
         user = request.user,
         content = content
     )
-
     post.save()
 
     return JsonResponse({"message": "Post submitted successfully."}, status=201)
@@ -109,8 +108,8 @@ def post(request):
 # return posts
 def get_posts(request):
     filter = request.GET.get("filter")
-    start_post = int(request.GET.get("start_post"))
-    end_post = int(request.GET.get("end_post"))
+    start_post = int(request.GET.get("start_post") or 0)
+    end_post = int(request.GET.get("end_post") or (start_post + 9))
 
     # filer posts
     if filter == "all":
@@ -134,15 +133,19 @@ def get_posts(request):
             "timestamp",
             "likes"
         ).all()
-    print(posts.count())
-    if (end_post > posts.count()):
-        end_post = posts.count()
-    posts = posts[start_post:end_post]
+    
+    # return one page of posts
+    total_post_count = posts.count()
+    if (end_post > total_post_count):
+        end_post = total_post_count
+    posts_page = posts[start_post:end_post]
 
+    print(start_post, end_post, posts_page.count(), total_post_count)
     response = {}
-    response['post_data'] = list(posts)
-    response['page_data'] = [posts.count(), ]
-    return JsonResponse(data, safe=False)
+    response['posts_page'] = list(posts_page)
+    response['posts_count'] = total_post_count
+    response['end_post'] = end_post
+    return JsonResponse(response, safe=False)
     
 
 # toggle follower status or retreive follower status   
@@ -184,7 +187,8 @@ def follow_status(request):
     
 
 # return like count for post and if signed in user has liked it
-@login_required
+# spent a huge amount of time trying incorporate this into my get_posts function 
+# specifically into the query on Posts, unfortunately wasn't able to figure it out
 def like(request):
     if request.method == "GET":
         post_id = request.GET.get("post_id")

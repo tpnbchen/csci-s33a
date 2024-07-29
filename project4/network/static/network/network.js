@@ -1,12 +1,11 @@
 // globals
 const path = window.location.pathname
 const page_size = 10
-let post_counter = 0
+var post_furthest = 0
 
 document.addEventListener('DOMContentLoaded', function() {
-    const token = document.querySelector('[name="csrfmiddlewaretoken"]').value;
 
-    // if on the profile page, add event listener to Follow/Unfollow button
+    // if on the profile page, add event listener to Follow/Unfollow button and load profile posts
     if (path.startsWith('/profile')) {
         const profile = JSON.parse(document.getElementById('profile').textContent);
         const button_follow = document.querySelector('#button-follow');
@@ -25,20 +24,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         load_posts('all');
     };
-    // load posts of followed users
+    // add event listener to load posts of followed users
     document.querySelector('#following').addEventListener('click', () => {
+        post_furthest = 0
         load_posts('following');
     });
 });
 
 // retrieve posts 
 function load_posts(filter) {
-    const posts_view_table = document.querySelector('#posts-view-table');
-    const start_post = post_counter;
-    const end_post = start_post + page_size -1
-    post_counter = end_post + 1;
+    console.log("load_post")
 
+    const posts_view_table = document.querySelector('#posts-view-table');
     posts_view_table.innerHTML = null;
+
+    const start_post = post_furthest;
+    const end_post = start_post + page_size
+    post_furthest = end_post;
 
     document.querySelector('#posts-view-title').innerHTML = 
         `<h4>Posts: ${filter.charAt(0).toUpperCase() + filter.slice(1)}</h4>`;
@@ -46,9 +48,10 @@ function load_posts(filter) {
     // get posts
     fetch(`/get_posts?filter=${filter}&start_post=${start_post}&end_post=${end_post}`)
     .then(response => response.json())
-    .then(posts => {
+    .then(post_data => {
+        post_furthest = post_data['end_post'];
         // generate parent div for each post
-        posts.forEach(post => {
+        post_data['posts_page'].forEach(post => {
             let post_item = document.createElement('div');
             post_item.id = `post-${post['id']}`;
             post_item.classList.add('row', 'border');
@@ -114,17 +117,41 @@ function load_posts(filter) {
                 post_button_save.style.display = 'none';
             };
         });
+        // pagination buttons
+
+        // clone and replace buttons to clear out eventlisteners
+        next_button_old = document.querySelector('#posts-pagination-next');
+        next_button = next_button_old.cloneNode(true);
+        next_button_old.parentNode.replaceChild(next_button, next_button_old);
+
+        previous_button_old = document.querySelector('#posts-pagination-previous');
+        previous_button = previous_button_old.cloneNode(true);
+        previous_button_old.parentNode.replaceChild(previous_button, previous_button_old);
+
+        if (post_furthest < post_data['posts_count']) {
+            next_button.style.display = 'block';
+            next_button.addEventListener('click', () => {
+                load_posts(filter);
+            });
+        } else {
+            next_button.style.display = 'none';
+        };
+        if (post_furthest > page_size) {
+            previous_button.style.display = 'block';
+            previous_button.addEventListener('click', () => {
+                post_furthest = end_post - page_size*2;
+                load_posts(filter);
+            });
+        } else {
+            previous_button.style.display = 'none';
+        };
     });
-    next_button = document.querySelector('#posts-pagination-next');
-    next_button.style.display = 'block';
-    next_button.addEventListener('click', () => {
-        load_posts(filter)
-    })
 };
+
 
 // create a new post
 function submit_post() {
-    
+    const token = document.querySelector('[name="csrfmiddlewaretoken"]').value;
     content = document.querySelector('#post-text').value;
 
     fetch('/post', {
@@ -137,10 +164,17 @@ function submit_post() {
             'Content-Type': 'application/json'
         }
     })
-    .then(load_posts('all'));
+    .then(response => response.json())
+    .then(message => {
+        console.log(message);
+        post_furthest = 0;
+        load_posts('all');
+    });
+    document.querySelector('#post-text').value = null;
 };
 
 function edit_post(post) {
+    const token = document.querySelector('[name="csrfmiddlewaretoken"]').value;
     post_content = document.querySelector(`#post-${post['id']}-content`);
     post_button_save = document.querySelector(`#post-${post['id']}-button-save`);
     
@@ -177,6 +211,7 @@ function edit_post(post) {
 
 // like or unlike post
 function like_post(post) {
+    const token = document.querySelector('[name="csrfmiddlewaretoken"]').value;
     fetch('/like', {
         method: 'POST',
         headers: {
@@ -197,6 +232,7 @@ function like_post(post) {
 
 // add or remove logged in user as follower of profile user
 function become_follower(profile) {
+    const token = document.querySelector('[name="csrfmiddlewaretoken"]').value;
     fetch('/follow_status', {
         method: 'POST',
         headers: {

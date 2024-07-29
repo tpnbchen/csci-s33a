@@ -12,11 +12,5 @@
             </form>
         </div> 
     {% endif %}   
-    <div id="posts-view">
-        <div id="posts-view-title"></div>
-        <div class="container-fluid border" id="posts-view-table"></div>
-    </div>
-    
-    {% block page %}
-    {% endblock page %}
+    {% include "network/posts.html" %}
 {% endblock %}

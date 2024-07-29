@@ -2,75 +2,35 @@
 {% load static %} 
 
 {% block body %}
-<h3>Profile</h3>
-{{ profile }}
-<h3>Following</h3>
-{{ following }}
-<h3>Followers</h3>
-{{ followers }}
-<h3>Posts</h3>
-{% for post in posts %}
-    {{ post.content }}
-    {{ post.timestamp }}
-    {{ post.user }}
-    <br>
-{% endfor %}
-
-{% if profile != user.get_username %}
-    {% csrf_token %}
+<div id="profile-view" class="container border">
+    <div id="profile-summary" class="row">
+        <div id="profile-user" class="col">
+            <h3>{{ profile }}</h3>
+        </div>
+        <div id="profile-stats" class="col">
+            <h4>Following:</h4>
+            <div id="following-count">{{ following }}</div>
+            <h4 >Followers:</h4>
+            <div id="follower-count">{{ followers }}</div>
+        </div>
+{% if user.is_authenticated %}
+    <div id="buttons" class="col">
     {{ profile|json_script:"profile" }}
-    <button id="follow" type="button">
-        {% if is_following %}
-            Unfollow
-        {% else %}
-            Follow
-        {% endif %}
-    </button>
+    {% if profile != user.get_username %}
+        {% csrf_token %}
+        <button class="btn btn-primary" id="button-follow" type="button">
+            {% if is_following %}
+                Unfollow
+            {% else %}
+                Follow
+            {% endif %}
+        </button>
+    {% endif %}
+    </div>
+</div>
+
 {% endif %}
-{% endblock %}
-
-{% block script %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const profile = JSON.parse(document.getElementById('profile').textContent);
-
-        document.querySelector('#follow').addEventListener('click', (event) => {
-            event.preventDefault();
-            become_follower(profile);
-        });
-    });
-
-    function become_follower(profile) {
-        const token = document.querySelector('[name="csrfmiddlewaretoken"]').value;
-        fetch('/follow_status', {
-            method: 'POST',
-            headers: {
-                "X-CSRFToken": token,
-            },
-            body: JSON.stringify({
-                profile: profile
-            })
-        })
-        .then(response => response.json())
-        .then(message => {
-            console.log(message);
-            follow_status(profile);
-        });
-    };
-
-    function follow_status(profile) {
-        
-        fetch(`/follow_status?profile=${profile}`)
-        .then(response => response.json())
-        .then(response => {
-            console.log(response['is_following']);
-            if (response['is_following'] === true) {
-                console.log(document.querySelector('#follow').innerHTML);
-                document.querySelector('#follow').innerHTML = 'Unfollow'
-            } else {
-                document.querySelector('#follow').innerHTML = 'Follow'
-            }
-        });
-    };
-</script>
+<div id="profile-posts" class="row">
+    {% include "network/posts.html" %}
+</div>
 {% endblock %}

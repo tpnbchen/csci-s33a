@@ -1,12 +1,13 @@
 import json
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
+from django.core import serializers
 from django.db import IntegrityError
+from django.db.models import Count
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
+from django.template.loader import render_to_string
 from django.urls import reverse
-from django.views.generic import ListView
 
 from .models import User, Post, Like, Follower
 
@@ -68,23 +69,22 @@ def register(request):
     
 
 # display user profile
-def profile(request, username):
+def profile(request, profile):
 
-    user = User.objects.get(username=username)
-    following = user.followees.all().count()
-    followers = user.followers.all().count()
-    posts = get_posts(request, username)
+    profile = User.objects.get(username=profile)
+    following = profile.follows.all().count()
+    followers = profile.followed_by.all().count()
+
     try:
-        Follower.objects.get(followee=request.user,follower__username=profile)
+        Follower.objects.get(follower=request.user,followee__username=profile)
         is_following = True
     except Follower.DoesNotExist:
         is_following = False
     
     return render(request, "network/profile.html", {
-        "profile": user.username,
+        "profile": profile.username,
         "following": following,
         "followers": followers,
-        "posts": posts,
         "is_following": is_following
     })
 
@@ -109,44 +109,54 @@ def post(request):
 
 
 # return posts
-def get_posts(request, filter):
-
+def get_posts(request):
+    filter = request.GET.get("filter")
     # filer posts
     if filter == "all":
-        posts = Post.objects.all()
+        posts =  Post.objects.all()
     elif filter == "following":
-        posts = Post.objects.filter(user__followers=request.user)
+        posts = Post.objects.filter(user__followed_by=request.user)
     else:
         try:
             posts = Post.objects.filter(user__username=filter)
         except:
-            print(filter+" user not found")
             return JsonResponse({"error": "Invalid filter."}, status=400)
     
-    posts = posts.order_by("-timestamp").all()
-
-    return posts
-
-    # paginator = Paginator(posts, 10)
-    # page_number = request.GET.get('page')
-    # page_obj = paginator.get_page(page_number)
-    
-    # return render(request, 'network/page.html', {'page_obj': page_obj})
+    posts = posts.annotate(
+            likes=Count('like')
+        ).order_by(
+            "-timestamp"
+        ).values(
+            "id",
+            "user__username",
+            "content", 
+            "timestamp",
+            "likes"
+        ).all()
+    data = list(posts)
+    return JsonResponse(data, safe=False)
     
 
 # toggle follower status or retreive follower status   
 @login_required
 def follow_status(request):
 
+    # return profile user follower count and if signed in user is a follower
     if request.method == "GET":
         profile = request.GET.get("profile")
+        user = User.objects.get(username=profile)
+        follower_count = user.followed_by.all().count()
         try:
             Follower.objects.get(follower=request.user,followee__username=profile)
             is_following = True
         except Follower.DoesNotExist:
             is_following = False
-        print("GET")
-        return JsonResponse({"is_following": is_following})        
+        return JsonResponse({
+            "is_following": is_following,
+            "follower_count": follower_count
+            })
+
+    # toggle if signed in user is follower or not of profile user       
     elif request.method == "POST":
         data = json.loads(request.body)
         profile = data.get("profile")
@@ -157,11 +167,40 @@ def follow_status(request):
             followee = User.objects.get(username=profile)
             record = Follower(follower=request.user,followee=followee)
             record.save()
-        print("POST")
         return JsonResponse({"message": "Follower added"}, status=201)
     else: 
         return JsonResponse({"error": "GET or POST request only."}, status=400)
-        
+    
 
-        
+@login_required
+def like(request):
+# return like count for post and if signed in user has liked it
+    if request.method == "GET":
+        post_id = request.GET.get("post_id")
+        user = request.user
+        like_count = Like.objects.filter(post_id=post_id).count()
+        try:
+            Like.objects.get(user=user, post_id=post_id)
+            liked = True
+        except Like.DoesNotExist:
+            liked = False
+        return JsonResponse({
+            "liked": liked,
+            "like_count": like_count
+            })
+
+    # toggle if signed in user likes post   
+    elif request.method == "POST":
+        data = json.loads(request.body)
+        post = data.get("post")
+        try:
+            record = Like.objects.get(user=request.user,post_id=post['id'])
+            record.delete()
+        except Like.DoesNotExist:
+            record = Like(user=request.user,post_id=post['id'])
+            record.save()
+        return JsonResponse({"message": "Post liked added"}, status=201)
+    else: 
+        return JsonResponse({"error": "GET or POST request only."}, status=400)
+         
 

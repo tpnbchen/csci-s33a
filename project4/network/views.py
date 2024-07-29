@@ -1,7 +1,6 @@
 import json
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.core import serializers
 from django.db import IntegrityError
 from django.db.models import Count
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -203,4 +202,20 @@ def like(request):
     else: 
         return JsonResponse({"error": "GET or POST request only."}, status=400)
          
+@login_required
+def edit(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST request required."}, status=400)
 
+    data = json.loads(request.body)
+    edit = data.get("edit")
+    post = data.get("post")
+    if str(request.user) != post['user__username']:
+        return JsonResponse({"error": "unauthorized."}, status=403)
+
+    record = Post.objects.get(id=post['id'])
+    record.content = edit
+    record.save()
+
+    updated_content = Post.objects.get(id=post['id']).content
+    return JsonResponse({"updated_content": updated_content}, status=201)

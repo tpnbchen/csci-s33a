@@ -33,7 +33,7 @@ function load_posts(filter) {
     posts_view_table.innerHTML = null;
 
     document.querySelector('#posts-view-title').innerHTML = 
-        `<h3>${filter.charAt(0).toUpperCase() + filter.slice(1)} Posts</h3>`;
+        `<h4>Posts: ${filter.charAt(0).toUpperCase() + filter.slice(1)}</h4>`;
 
     // get posts
     fetch(`/get_posts?filter=${filter}`)
@@ -49,14 +49,14 @@ function load_posts(filter) {
             // generate parent div for post fields
             post_contents = document.createElement('div');
             post_item.appendChild(post_contents); 
-            post_contents.id = `${post_item.id}-content`;
+            post_contents.id = `${post_item.id}-contents`;
             post_contents.classList.add('col');
 
             // generate div for post buttons
             post_buttons = document.createElement('div');
             post_item.appendChild(post_buttons); 
             post_buttons.id = `${post_item.id}-buttons`;
-            post_buttons.classList.add('col');
+            post_buttons.classList.add('col-2');
         
             // generate div for each post field
             for (const field in post) {
@@ -74,7 +74,6 @@ function load_posts(filter) {
                 } else {
                     field_element.innerHTML = `${field}: ${post[field]}`;
                 };
-
             };
             
             // like button
@@ -94,11 +93,17 @@ function load_posts(filter) {
                 post_buttons.appendChild(post_button_edit); 
                 post_button_edit.classList.add('btn', 'btn-primary');
                 post_button_edit.id = `${post_item.id}-button-edit`;
-                post_button_edit.innerHTML = 'edit';
-
+                post_button_edit.innerHTML = 'Edit';
                 post_button_edit.addEventListener('click', () => {
-                    
+                    edit_post(post)
                 });
+                //save button
+                post_button_save = document.createElement('button');
+                post_buttons.appendChild(post_button_save);
+                post_button_save.classList.add('btn', 'btn-primary');
+                post_button_save.id = `post-${post['id']}-button-save`;
+                post_button_save.innerHTML = 'Save';
+                post_button_save.style.display = 'none';
             };
         });
     });
@@ -119,12 +124,44 @@ function submit_post() {
             'X-CSRFToken': token,
             'Content-Type': 'application/json'
         }
-    }).then(load_posts('all'));
+    })
+    .then(load_posts('all'));
 };
 
-function edit_post() {
+function edit_post(post) {
     const token = document.querySelector('[name="csrfmiddlewaretoken"]').value;
+    post_content = document.querySelector(`#post-${post['id']}-content`);
+    post_button_save = document.querySelector(`#post-${post['id']}-button-save`);
+    
+    // create input textarea
+    post_content_new = document.createElement('textarea');
+    post_content_new.classList.add('form-control');
+    post_content_new.id = 'post-edit';
+    post_content.innerHTML = null;
+    post_content.appendChild(post_content_new);
 
+    // show save button
+    post_button_save.style.display = 'block';
+    post_button_save.addEventListener('click', () => {
+        edit = document.querySelector('#post-edit').value;
+        fetch('/edit', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                edit: edit,
+                post: post
+            })
+        })
+        .then(response => response.json())
+        .then(content => {
+            post_content = document.querySelector(`#post-${post['id']}-content`);
+            post_content.innerHTML = `content: ${content['updated_content']}`;
+            post_button_save.style.display = 'none';
+        });
+    });
 };
 
 // like or unlike post
@@ -134,6 +171,8 @@ function like_post(post) {
         method: 'POST',
         headers: {
             'X-CSRFToken': token,
+            'Content-Type': 'application/json'
+
         },
         body: JSON.stringify({
             post: post
@@ -153,6 +192,7 @@ function become_follower(profile) {
         method: 'POST',
         headers: {
             'X-CSRFToken': token,
+            'Content-Type': 'application/json'
         },
         body: JSON.stringify({
             profile: profile
@@ -184,12 +224,12 @@ function update_frontend_follow_status(profile) {
 
 // get like status of post, update webpage to match
 function update_frontend_like_status(post) {
-    post_button_like = document.querySelector(`#post-${post['id']}-button-like`);
-    post_likes_count = document.querySelector(`#post-${post['id']}-likes`);
     fetch(`/like?post_id=${post['id']}`)
     .then(response => response.json())
     .then(data => {
-        if (data['liked'] === false) {
+        post_button_like = document.querySelector(`#post-${post['id']}-button-like`);
+        post_likes_count = document.querySelector(`#post-${post['id']}-likes`);
+        if (data['liked'] == false) {
             post_button_like.innerHTML = 'Like';
         } else {
             post_button_like.innerHTML = 'Unlike';

@@ -2,10 +2,10 @@
 {% load static %} 
 
 {% block body %}
-<div id="profile-view" class="container border">
-    <div id="profile-summary" class="row">
+<div id="profile-view" class="container">
+    <div id="profile-summary" class="row border">
         <div id="profile-user" class="col">
-            <h3>{{ profile }}</h3>
+            <h2>{{ profile }}</h2>
         </div>
         <div id="profile-stats" class="col">
             <h4>Following:</h4>
@@ -30,7 +30,7 @@
 </div>
 
 {% endif %}
-<div id="profile-posts" class="row">
+<div id="profile-posts" class="row border">
     {% include "network/posts.html" %}
 </div>
 {% endblock %}

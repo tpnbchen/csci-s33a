@@ -1,6 +1,10 @@
-document.addEventListener('DOMContentLoaded', function() {
+// globals
+const path = window.location.pathname
+const page_size = 10
+let post_counter = 0
 
-    const path = window.location.pathname
+document.addEventListener('DOMContentLoaded', function() {
+    const token = document.querySelector('[name="csrfmiddlewaretoken"]').value;
 
     // if on the profile page, add event listener to Follow/Unfollow button
     if (path.startsWith('/profile')) {
@@ -11,8 +15,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 event.preventDefault();
                 become_follower(profile);
             });
-        load_posts(`${path.split('/')[2]}`)
         }; 
+        load_posts(`${path.split('/')[2]}`)
     // if on the home page, add event listener to post form and load all posts
     } else if (path === '/') {
         document.querySelector('#post-form').addEventListener('submit', (event) => {
@@ -30,13 +34,17 @@ document.addEventListener('DOMContentLoaded', function() {
 // retrieve posts 
 function load_posts(filter) {
     const posts_view_table = document.querySelector('#posts-view-table');
+    const start_post = post_counter;
+    const end_post = start_post + page_size -1
+    post_counter = end_post + 1;
+
     posts_view_table.innerHTML = null;
 
     document.querySelector('#posts-view-title').innerHTML = 
         `<h4>Posts: ${filter.charAt(0).toUpperCase() + filter.slice(1)}</h4>`;
 
     // get posts
-    fetch(`/get_posts?filter=${filter}`)
+    fetch(`/get_posts?filter=${filter}&start_post=${start_post}&end_post=${end_post}`)
     .then(response => response.json())
     .then(posts => {
         // generate parent div for each post
@@ -107,13 +115,17 @@ function load_posts(filter) {
             };
         });
     });
+    next_button = document.querySelector('#posts-pagination-next');
+    next_button.style.display = 'block';
+    next_button.addEventListener('click', () => {
+        load_posts(filter)
+    })
 };
 
 // create a new post
 function submit_post() {
     
     content = document.querySelector('#post-text').value;
-    const token = document.querySelector('[name="csrfmiddlewaretoken"]').value;
 
     fetch('/post', {
         method: 'POST',
@@ -129,7 +141,6 @@ function submit_post() {
 };
 
 function edit_post(post) {
-    const token = document.querySelector('[name="csrfmiddlewaretoken"]').value;
     post_content = document.querySelector(`#post-${post['id']}-content`);
     post_button_save = document.querySelector(`#post-${post['id']}-button-save`);
     
@@ -166,7 +177,6 @@ function edit_post(post) {
 
 // like or unlike post
 function like_post(post) {
-    const token = document.querySelector('[name="csrfmiddlewaretoken"]').value;
     fetch('/like', {
         method: 'POST',
         headers: {
@@ -187,7 +197,6 @@ function like_post(post) {
 
 // add or remove logged in user as follower of profile user
 function become_follower(profile) {
-    const token = document.querySelector('[name="csrfmiddlewaretoken"]').value;
     fetch('/follow_status', {
         method: 'POST',
         headers: {

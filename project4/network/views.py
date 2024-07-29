@@ -5,7 +5,6 @@ from django.db import IntegrityError
 from django.db.models import Count
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
-from django.template.loader import render_to_string
 from django.urls import reverse
 
 from .models import User, Post, Like, Follower
@@ -110,6 +109,9 @@ def post(request):
 # return posts
 def get_posts(request):
     filter = request.GET.get("filter")
+    start_post = int(request.GET.get("start_post"))
+    end_post = int(request.GET.get("end_post"))
+
     # filer posts
     if filter == "all":
         posts =  Post.objects.all()
@@ -132,7 +134,14 @@ def get_posts(request):
             "timestamp",
             "likes"
         ).all()
-    data = list(posts)
+    print(posts.count())
+    if (end_post > posts.count()):
+        end_post = posts.count()
+    posts = posts[start_post:end_post]
+
+    response = {}
+    response['post_data'] = list(posts)
+    response['page_data'] = [posts.count(), ]
     return JsonResponse(data, safe=False)
     
 
@@ -160,7 +169,10 @@ def follow_status(request):
         data = json.loads(request.body)
         profile = data.get("profile")
         try:
-            record = Follower.objects.get(follower=request.user,followee__username=profile)
+            record = Follower.objects.get(
+                    follower=request.user,
+                    followee__username=profile
+            )
             record.delete()
         except Follower.DoesNotExist:
             followee = User.objects.get(username=profile)
@@ -171,9 +183,9 @@ def follow_status(request):
         return JsonResponse({"error": "GET or POST request only."}, status=400)
     
 
+# return like count for post and if signed in user has liked it
 @login_required
 def like(request):
-# return like count for post and if signed in user has liked it
     if request.method == "GET":
         post_id = request.GET.get("post_id")
         user = request.user
@@ -201,7 +213,9 @@ def like(request):
         return JsonResponse({"message": "Post liked added"}, status=201)
     else: 
         return JsonResponse({"error": "GET or POST request only."}, status=400)
-         
+
+
+# edit post
 @login_required
 def edit(request):
     if request.method != "POST":

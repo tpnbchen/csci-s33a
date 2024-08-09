@@ -1,0 +1,21 @@
+{% extends "hanabi/layout.html" %}
+
+{% block body %}
+    {% if user.is_authenticated %}
+        <div id="new-game">
+            <h3>New Game</h3>
+            <form id="new-game-form">
+                {% csrf_token %}
+                <label for="game-name">Game Name</label>
+                <input type="text" class="form-control" id="game-name" name="game-name" autofocus>
+                <label for="game-numplayers">Number of Players</label><br>
+                <input type="number" class="form-control" id="game-numplayers" name="game-numplayers" value="2" min="2" max="5">
+                <input type="submit" class="btn btn-primary" id="new-game-submit" value="Create New Game">
+            </form>
+        </div>
+        <div id="list-games">
+            <h3>Available Games</h3>
+            <div id="list-games-table"></div>
+        </div>
+    {% endif %}
+{% endblock %}

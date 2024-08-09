@@ -3,5 +3,13 @@ from . import views
 
 urlpatterns = [
     path("", views.index, name="index"),
-    path("rules", views.rules, name="rules")
+    path("login", views.login_view, name="login"),
+    path("logout", views.logout_view, name="logout"),
+    path("new_user", views.new_user, name="new_user"),
+    path("rules", views.rules, name="rules"),
+    path("games", views.games, name="games"),
+    path("new_game", views.new_game, name="new_game"),
+    path("list_games", views.list_games, name="list_games"),
+    path("join_game", views.join_game, name="join_game"),
+    path("game/<int:id>", views.game, name="game")
 ]

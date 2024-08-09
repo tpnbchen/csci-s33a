@@ -71,9 +71,11 @@ def new_user(request):
 def rules(request):
     return render(request, "hanabi/rules.html")
 
+
 # games page
 def games(request):
     return render(request, "hanabi/games.html")
+
 
 # get list of new games
 def list_games(request):
@@ -95,6 +97,7 @@ def list_games(request):
     response['games_list'] = list(games)
     return JsonResponse(response, safe=False)
 
+
 # create a new game
 def new_game(request):
     if request.method != "POST":
@@ -112,7 +115,7 @@ def new_game(request):
     new_game.save()
 
     player_1 = GamePlayer(
-        player = request.user,
+        user = request.user,
         game = new_game
     )
     player_1.save()
@@ -153,9 +156,9 @@ def join_game(request):
             
     else:
         return JsonResponse({"error": "Something went wrong joining the game"}, status=400)
-
-
+    
     return JsonResponse({"message": "Game joined"}, status=201)
+
 
 # go to gameplay interface for a specific game
 def play_game(request, game_id):
@@ -163,7 +166,6 @@ def play_game(request, game_id):
         game = Game.objects.get(id=game_id, gameplayer__user=request.user)
     except ObjectDoesNotExist:
         return HttpResponseRedirect(reverse("index")) 
-
 
     return render(request, f"hanabi/game.html", {
         "name": game.name,
@@ -189,9 +191,9 @@ def setup_game(game):
     hands = {}
     discard = []
     fireworks = {}
-    gameplayers = GamePlayer.objects.filter(game=game)
-    #User.objects.filter(gameplayer__game=game)
-    
+    for color in COLORS:
+        fireworks[color] = 0
+    gameplayers = GamePlayer.objects.filter(game=game)    
 
     # randomly determine player order
     player_list = list(gameplayers)
@@ -200,6 +202,7 @@ def setup_game(game):
     for player in player_list:
         order = player_list.index(player)
         player.turn_order = order
+        player.save()
         if order == 0:
             starting_player = player
 
@@ -228,6 +231,7 @@ def setup_game(game):
             hands[gameplayer.user.id].update({card: deck.pop()})
             hands[gameplayer.user.id][card].update({"knowledge": 'set()'})
 
+    # save board to db
     board = Board(
         game = game,
         currentPlayer = starting_player.user,
@@ -243,21 +247,26 @@ def setup_game(game):
 
 # retreive game state
 def game_state(request, game_id):
+    print("gamestatehere")
     requesting_player = request.user
+
+    # get active game with the requesting player
     game = Game.objects.get(id=game_id)
-    players = GamePlayer.objects.filter(game=game)
+    gameplayers = GamePlayer.objects.filter(game=game)
     board = Board.objects.get(game=game)
     cards = json.loads(board.cards)
 
+    # get information specific to requesting player
     other_hands = {}
     requesting_player_hand = {}
-    for player in players:
-        if player is not requesting_player:
-            other_hands[player.user.id] = cards['hands'][player.user.id]
+    for gameplayer in gameplayers:
+        if gameplayer.user is not requesting_player:
+            other_hands[gameplayer.user.id] = cards['hands'][f"{gameplayer.user.id}"]
         else:
-            for card in cards['hands'][player.user.id]:
-                requesting_player_hand[card] = cards['hands'][player.user.id][card]['knowledge']
-        
+            for card in cards['hands'][gameplayer.user.id]:
+                requesting_player_hand[card] = cards['hands'][gameplayer.user.id][card]['knowledge']
+    
+    # combine all state data to send to client
     state = {
         "score": game.score,
         "fuses": game.fuses,
@@ -265,9 +274,9 @@ def game_state(request, game_id):
         "deck": cards['deck'],
         "fireworks": cards['fireworks'],
         "discard": cards['discard'],
-        "current_player": board.currentPlayer,
+        "current_player": board.currentPlayer.id,
         "other_hands": other_hands,
         "requesting_player_hand": requesting_player_hand
     }
 
-    return JsonResponse(json.dumps(state), safe=False)
+    return JsonResponse(state, safe=False)

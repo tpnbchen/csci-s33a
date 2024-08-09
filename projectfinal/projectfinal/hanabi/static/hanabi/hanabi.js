@@ -1,12 +1,16 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     const path = window.location.pathname;
+
     if (path.startsWith('/hanabi/games')) {
         load_games();
         document.querySelector('#new-game-form').addEventListener('submit', (event) => {
-            new_game();
             event.preventDefault();
+            new_game();
         });
+    } else if (path.startsWith('/hanabi/play_game/')) {
+        var game_id = path.replace("/hanabi/play_game/", "");
+        render_game(game_id);
     };
 });
 
@@ -103,15 +107,50 @@ function join_game(game) {
     .then(response => response.json())
     .then(message => {
         console.log(message);
-        render_game(game);
+        fetch(`/hanabi/play_game/${game.id}`)
     });
 };
 
 // get current game state
-function render_game(game){
-    fetch(`hanabi/game_state/${game.id}`)
+function render_game(game_id){
+    fetch(`/hanabi/game_state/${game_id}`)
     .then(response => response.json())
     .then(game_state => {
-        console.log(game_state);
+        
+        // render current player
+        document.querySelector('#table-state-current-player').innerHTML = `current player: ${game_state['current_player']}`
+        
+        // render current score
+        document.querySelector('#table-state-current-score').innerHTML = `current score: ${game_state['score']}`
+
+        // render fuses and hints
+        document.querySelector('#table-state-fuses').innerHTML = `fuses: ${game_state['fuses']}`
+        document.querySelector('#table-state-hints').innerHTML = `hints: ${game_state['hints']}`
+
+        // render fireworks
+        for (var color in game_state['fireworks']) {
+            document.querySelector(`#table-state-fireworks-${color}`).innerHTML = `${color}: ${game_state['fireworks'][color]}`
+        };
+
+        // render discards
+        document.querySelector('#table-state-discards').innerHTML = `discards: ${game_state['discards']}`
+
+        // generate hands
+        player_hands = document.querySelector('#players-state')
+        for (var player in game_state['other_hands']) {
+            hand = document.createElement('div');
+            player_hands.appendChild(hand);
+            hand.id = `players-state-hand-${player}`;
+            for (var card in game_state['other_hands'][player])
+                console.log(game_state['other_hands'][player])
+                card = document.createElement('div');
+                hand.appendChild(card);
+                card.id = `players-state-hand-${player}-${card}`;
+                card.innerHTML = game_state['other_hands'][player][card]
+        };
+
+        // generate own hand
+        document.querySelector('#players-state-self').innerHTML = game_state['requesting_player_hand']
+
     })
 };

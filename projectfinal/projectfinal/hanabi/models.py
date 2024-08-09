@@ -30,8 +30,6 @@ class Board(models.Model):
     cards = models.JSONField(null=True)
     currentPlayer = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
 
-    # board format:
-
 
 class GamePlayer(models.Model):
     user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)

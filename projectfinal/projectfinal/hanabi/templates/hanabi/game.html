@@ -2,5 +2,30 @@
 
 {% block body %}
     {% if user.is_authenticated %}
+    <h1>Game: {{ name }}</h1>
+    <h2>Table</h2>
+    <div class="table-state">
+        <div class="table-state-current-player"></div>
+        <div class="table-state-fuses"></div>
+        <div class="table-state-hints"></div>
+        <div class="table-state-fireworks">
+            <div class="table-state-fireworks-white"></div>
+            <div class="table-state-fireworks-red"></div>
+            <div class="table-state-fireworks-blue"></div>
+            <div class="table-state-fireworks-yellow"></div>
+            <div class="table-state-fireworks-green"></div>
+        </div>
+        <div class="table-state-deck"></div>
+        <div class="table-state-discards"></div>
+    </div>
+    <h2>Players</h2>
+    <div class="players-state"></div>
+    <h2>Actions</h2>
+    <div class="turn-actions">
+        <div class="turn-actions-hint"></div>
+        <div class="turn-actions-discard"></div>
+        <div class="turn-actions-play"></div>
+    </div>
+
     {% endif %}
 {% endblock %}

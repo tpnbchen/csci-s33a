@@ -2,6 +2,10 @@
 
 {% block body %}
     {% if user.is_authenticated %}
+    {% if error %}
+        <div>{{ error }}</div>
+    {% endif %}
+
         <div id="new-game">
             <h3>New Game</h3>
             <form id="new-game-form">

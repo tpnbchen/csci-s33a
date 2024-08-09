@@ -25,11 +25,15 @@ class Game(models.Model):
 
     status = models.PositiveBigIntegerField(choices=Status, default=Status.NEW)
     
-class Deck(models.Model):
+class Board(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     cards = models.JSONField(null=True)
+    currentPlayer = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+
+    # board format:
+
 
 class GamePlayer(models.Model):
-    player = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    hand = models.JSONField(null=True)
+    turn_order = models.PositiveBigIntegerField(null=True)

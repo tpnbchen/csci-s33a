@@ -1,12 +1,17 @@
-import json
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
+from django.db.models import Count
+from django.db.models.base import ObjectDoesNotExist
 from django.shortcuts import render
 from django.http import HttpResponse,HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 
-from .models import User, Game, GamePlayer, Deck
+from random import shuffle
+
+from .models import User, Game, GamePlayer, Board
+
+import json
 
 def index(request):
     return render(request, "hanabi/index.html")
@@ -43,7 +48,7 @@ def new_user(request):
         email = request.POST["email"]
 
         password = request.POST["password"]
-        confirmation = request.POST["password"]
+        confirmation = request.POST["confirmation"]
         if confirmation != password: 
             return render(request, "hanabi/new_user.html", {
                 "message": "Passwords do not match."
@@ -74,6 +79,8 @@ def games(request):
 def list_games(request):
     games = Game.objects.filter(
         status=Game.Status.NEW
+    ).annotate(
+        joined=Count('gameplayer')
     ).order_by(
         "-started"
     ).values(
@@ -81,6 +88,7 @@ def list_games(request):
         "name",
         "creator__username",
         "numplayers",
+        "joined",
         "started"
     )
     response = {}
@@ -121,7 +129,7 @@ def join_game(request):
     requested_game = data.get("game")
     requested_game_id = requested_game["id"]
     game = Game.objects.get(id=requested_game_id)
-    existing_players = User.objects.filter(gameplayer__player=request.user, gameplayer__game=game)
+    existing_players = User.objects.filter(gameplayer__game=game)
     filled_spots = GamePlayer.objects.filter(game=game).count()
 
     # prevent join if player is already in game or game is finished or active
@@ -130,7 +138,7 @@ def join_game(request):
             game.get_status_display() == 'New'
        ):
         player = GamePlayer(
-            player = request.user,
+            user = request.user,
             game = game
         )
         player.save()
@@ -138,19 +146,128 @@ def join_game(request):
         # Start game if fill last spot
         filled_spots = GamePlayer.objects.filter(game=game).count()
         if filled_spots == game.numplayers:
+            setup_game(game)
             game.status = game.Status.IN_PROGRESS
             game.save()
-            play_game()
-        print("cannot join")
+            play_game(request, game.id)
+            
+    else:
+        return JsonResponse({"error": "Something went wrong joining the game"}, status=400)
 
 
     return JsonResponse({"message": "Game joined"}, status=201)
 
 # go to gameplay interface for a specific game
-def game(game):
-    pass
+def play_game(request, game_id):
+    try:
+        game = Game.objects.get(id=game_id, gameplayer__user=request.user)
+    except ObjectDoesNotExist:
+        return HttpResponseRedirect(reverse("index")) 
+
+
+    return render(request, f"hanabi/game.html", {
+        "name": game.name,
+        "score": game.score,
+        "hints": game.hints,
+        "fuses": game.fuses,
+        # players
+    })
 
 # take a turn
 def take_turn(request):
     pass
 
+# shuffle deck and deal hands
+def setup_game(game):
+
+    # generate board
+    # hard coded for now. Create function  to change in future
+    COLORS = ("white", "yellow", "green", "blue", "red")
+    NUMBERS = 5
+
+    deck = []
+    hands = {}
+    discard = []
+    fireworks = {}
+    gameplayers = GamePlayer.objects.filter(game=game)
+    #User.objects.filter(gameplayer__game=game)
+    
+
+    # randomly determine player order
+    player_list = list(gameplayers)
+    shuffle(player_list)
+    
+    for player in player_list:
+        order = player_list.index(player)
+        player.turn_order = order
+        if order == 0:
+            starting_player = player
+
+    # generate deck
+    for color in COLORS:
+        for i in range(1, NUMBERS):
+            if i == 1:
+                for j in range(3):
+                    deck.append({'color': color, "number": f"{i}"})
+            elif i in [2, 3, 4]:
+                for j in range(2):
+                    deck.append({'color': color, "number": f"{i}"})
+            else:
+                deck.append({'color': color, "number": f"{i}"})
+    shuffle(deck)
+    
+    # deal hands
+    if len(gameplayers) in [4, 5]:
+        handsize = 4
+    else:
+        handsize = 5
+    for gameplayer in gameplayers:
+        hands[gameplayer.user.id] = {}
+        for i in range(1, handsize+1):
+            card = f"card {i}"
+            hands[gameplayer.user.id].update({card: deck.pop()})
+            hands[gameplayer.user.id][card].update({"knowledge": 'set()'})
+
+    board = Board(
+        game = game,
+        currentPlayer = starting_player.user,
+        cards = json.dumps({
+            "deck": deck,
+            "hands": hands,
+            "discard": discard,
+            "fireworks": fireworks
+        })
+    )
+    board.save()
+
+
+# retreive game state
+def game_state(request, game_id):
+    requesting_player = request.user
+    game = Game.objects.get(id=game_id)
+    players = GamePlayer.objects.filter(game=game)
+    board = Board.objects.get(game=game)
+    cards = json.loads(board.cards)
+
+    other_hands = {}
+    requesting_player_hand = {}
+    for player in players:
+        if player is not requesting_player:
+            other_hands[player.user.id] = cards['hands'][player.user.id]
+        else:
+            for card in cards['hands'][player.user.id]:
+                requesting_player_hand[card] = cards['hands'][player.user.id][card]['knowledge']
+        
+    state = {
+        "score": game.score,
+        "fuses": game.fuses,
+        "hints": game.hints,
+        "deck": cards['deck'],
+        "fireworks": cards['fireworks'],
+        "discard": cards['discard'],
+        "current_player": board.currentPlayer,
+        "other_hands": other_hands,
+        "requesting_player_hand": requesting_player_hand
+    }
+
+    return JsonResponse(json.dumps(state), safe=False)

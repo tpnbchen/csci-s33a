@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault();
         });
     };
-
 });
 
 // start a new game
@@ -104,6 +103,15 @@ function join_game(game) {
     .then(response => response.json())
     .then(message => {
         console.log(message);
-        // open game
+        render_game(game);
     });
+};
+
+// get current game state
+function render_game(game){
+    fetch(`hanabi/game_state/${game.id}`)
+    .then(response => response.json())
+    .then(game_state => {
+        console.log(game_state);
+    })
 };
